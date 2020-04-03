@@ -72,13 +72,20 @@
 
 (defvar evil-god-last-command nil)
 
+(defvar evil-god-entry-command nil
+  "The command that was last used to enter God state.
+This variable is managed by `evil-execute-in-god-state', which
+ordinarily sets its value to `evil-execute-in-god-state'.  If another
+command wraps `evil-execute-in-god-state', then the value will be set
+to the name of that command instead.")
+
 (defun evil-god-fix-last-command ()
   "Change `last-command' to be the command before `evil-execute-in-god-state'."
   (setq last-command evil-god-last-command))
 
 (defun evil-stop-execute-in-god-state ()
   "Switch back to previous evil state."
-  (unless (or (eq real-this-command #'evil-execute-in-god-state)
+  (unless (or (eq real-this-command evil-god-entry-command)
               (minibufferp))
     (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
     (remove-hook 'post-command-hook 'evil-stop-execute-in-god-state)
@@ -100,6 +107,7 @@
   (add-hook 'post-command-hook #'evil-stop-execute-in-god-state t)
   (setq evil-execute-in-god-state-buffer (current-buffer))
   (setq evil-god-last-command last-command)
+  (setq evil-god-entry-command this-command)
   (cond
    ((evil-visual-state-p)
     (let ((mrk (mark))
